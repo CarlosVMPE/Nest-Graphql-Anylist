@@ -9,15 +9,63 @@ type Item {
   quantityUnits: String
 }
 
+type User {
+  id: ID!
+  fullName: String!
+  email: String!
+  roles: [String!]!
+  isActive: Boolean!
+  lastUpdateBy: User
+}
+
+type AuthResponse {
+  token: String!
+  user: User!
+}
+
 type Query {
+  revalidate: AuthResponse!
+  users(roles: [ValidRoles!] = []): [User!]!
+  user(id: ID!): User!
   items: [Item!]!
   item(id: ID!): Item!
 }
 
+"""Roles validos en el sistema"""
+enum ValidRoles {
+  admin
+  user
+  superUser
+}
+
 type Mutation {
+  signup(signupInput: SignupInput!): AuthResponse!
+  login(loginInput: LoginInput!): AuthResponse!
+  blockUser(id: ID!): User!
+  updateUser(updateUserInput: UpdateUserInput!): User!
   createItem(createItemInput: CreateItemInput!): Item!
   updateItem(updateItemInput: UpdateItemInput!): Item!
   removeItem(id: ID!): Item!
+}
+
+input SignupInput {
+  email: String!
+  fullName: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  email: String
+  password: String
+  fullName: String
+  id: ID!
+  roles: [ValidRoles!]
+  isActive: Boolean
 }
 
 input CreateItemInput {
