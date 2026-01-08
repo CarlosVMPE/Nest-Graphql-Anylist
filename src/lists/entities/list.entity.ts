@@ -10,9 +10,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity({ name: 'items' })
+@Entity({ name: 'list' })
 @ObjectType()
-export class Item {
+export class List {
   @PrimaryGeneratedColumn('uuid')
   @Field(() => ID)
   id: string;
@@ -21,21 +21,13 @@ export class Item {
   @Field(() => String)
   name: string;
 
-  /* @Column()
-  @Field(() => Float)
-  quantity: number; */
-
-  @Column({ nullable: true })
-  @Field(() => String, { nullable: true })
-  quantityUnits?: string;
-  // stores
-  // user
-  @ManyToOne(() => User, (user) => user.items, { nullable: false, lazy: true })
-  @Index('userId-index')
+  // Relationships
+  @ManyToOne(() => User, (user) => user.list, { nullable: false, lazy: true })
+  @Index('userId-list-index')
   @Field(() => User)
   user: User;
 
-  @OneToMany(() => ListItem, (listItem) => listItem.item, { lazy: true })
-  @Field(() => [ListItem])
+  @OneToMany(() => ListItem, (listItem) => listItem.list, { lazy: true })
+  //@Field(() => [ListItem])
   listItems: ListItem[];
 }

@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
 import { UpdateUserInput } from './dto/update-user.input';
+import { PaginationArgs, SearchArgs } from 'src/common/dto/args';
 
 @Injectable()
 export class UsersService {
@@ -33,23 +34,32 @@ export class UsersService {
     }
   }
 
-  async findAll(roles: ValidRoles[]): Promise<User[]> {
-    if (roles.length === 0)
-      return this.userRepository.find({
-        //  TODO: No es necesario porque tenemos lazy en la propiedad
-        /* relations: {
-          lastUpdateBy: true,
-        }, */
-      });
+  async findAll(
+    roles: ValidRoles[],
+    paginationArgs: PaginationArgs,
+    searchArgs: SearchArgs,
+  ): Promise<User[]> {
+    const { limit, offset } = paginationArgs;
+    const { search } = searchArgs;
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .take(limit)
+      .skip(offset);
 
-    return (
-      this.userRepository
-        .createQueryBuilder('user')
-        .andWhere('ARRAY[roles] && ARRAY[:...roles]')
-        .setParameter('roles', roles)
-        //.where('user.roles && ARRAY[:...roles]', { roles })
-        .getMany()
-    );
+    if (roles.length > 0) {
+      queryBuilder.where('user.roles && ARRAY[:...roles]', { roles });
+    }
+
+    if (search) {
+      queryBuilder.where(
+        'LOWER(user.fullName) LIKE :search OR LOWER(user.email) LIKE :search',
+        {
+          search: `%${search.toLowerCase()}%`,
+        },
+      );
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findOneByEmail(email: string): Promise<User> {
